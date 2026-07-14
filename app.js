@@ -12,16 +12,14 @@
 // To start the server: node app.js
 // ============================================================
 
-const express = require('express')
-const morgan = require('morgan')
-const cors = require('cors')
+const express = require("express");
+const morgan = require("morgan");
+const cors = require("cors");
 
 // ------------------------------------------------------------
 // STEP 1 — Import your database connection and Quote model
-
-
-
-
+const db = require("./db");
+const Quote = require("./models/quote");
 
 // Importing Quote here registers it with the connection so
 // db.sync() below knows to create the Quotes table.
@@ -30,14 +28,12 @@ const cors = require('cors')
 // Jump to the last line for STEP 2
 // ------------------------------------------------------------
 
+const app = express();
+const PORT = 8080;
 
-const app = express()
-const PORT = 8080
-
-app.use(express.json())  // lets the server read JSON from req.body
-app.use(morgan('dev'))   // logs every incoming request
-app.use(cors())          // allows the React frontend to call this server
-
+app.use(express.json()); // lets the server read JSON from req.body
+app.use(morgan("dev")); // logs every incoming request
+app.use(cors()); // allows the React frontend to call this server
 
 // ============================================================
 // ROUTES
@@ -49,14 +45,14 @@ app.use(cors())          // allows the React frontend to call this server
 // Return every quote from the database as an array.
 // Hint: find the Sequelize method that fetches all rows from a table.
 // ------------------------------------------------------------
-app.get('/api/quotes', async (req, res, next) => {
+app.get("/api/quotes", async (req, res, next) => {
   try {
-
+    const quotes = await Quote.findAll();
+    res.json(quotes);
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
-
+});
 
 // ------------------------------------------------------------
 // POST /api/quotes
@@ -68,14 +64,19 @@ app.get('/api/quotes', async (req, res, next) => {
 // Hint: find the Sequelize method that inserts a new row and returns it.
 // Send back status 201 and the new quote.
 // ------------------------------------------------------------
-app.post('/api/quotes', async (req, res, next) => {
+app.post("/api/quotes", async (req, res, next) => {
   try {
+    const { text, author } = req.body; // get the request info
 
+    const newQuote = { text, author }; // create variable save data
+
+    await Quote.create(newQuote); //tell module to create info
+
+    res.status(201).json(newQuote);
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
-
+});
 
 // ------------------------------------------------------------
 // DELETE /api/quotes/:id
@@ -89,14 +90,20 @@ app.post('/api/quotes', async (req, res, next) => {
 //   4. Call the instance method that deletes the row
 //   5. Send 204 — no body needed on a successful delete
 // ------------------------------------------------------------
-app.delete('/api/quotes/:id', async (req, res, next) => {
+app.delete("/api/quotes/:id", async (req, res, next) => {
   try {
-
+    //DELETE /api/quotes/:id uses req.params.id to get the id
+    const deleteId = Number(req.params.id);
+    const deleteQuote = await Quote.findByPk(deleteId);
+    if (!deleteQuote) {
+      res.sendStatus(404);
+    }
+    deleteQuote.destroy();
+    res.status(204).send(); //?
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
-
+});
 
 // ============================================================
 // STRETCH ROUTES — come back to these after the three above work
@@ -105,7 +112,6 @@ app.delete('/api/quotes/:id', async (req, res, next) => {
 // GET /api/quotes/:id   — return a single quote by its id
 // PATCH /api/quotes/:id — update a quote's text or author
 
-
 // ============================================================
 // ERROR HANDLER
 //
@@ -113,10 +119,9 @@ app.delete('/api/quotes/:id', async (req, res, next) => {
 // Any route that calls next(error) lands here.
 // ============================================================
 app.use((error, req, res, next) => {
-  console.error(error)
-  res.sendStatus(500)
-})
-
+  console.error(error);
+  res.sendStatus(500);
+});
 
 // ============================================================
 // STEP 2 — Start the server
@@ -127,9 +132,9 @@ app.use((error, req, res, next) => {
 // ============================================================
 async function startApp() {
   // connect to your db here before the express server listens
-
-
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+  await db.sync().then(() => {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  });
 }
 
-startApp()
+startApp();
