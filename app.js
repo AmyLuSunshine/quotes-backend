@@ -14,7 +14,7 @@
 
 const express = require("express");
 const morgan = require("morgan");
-const cors = require("cors");
+const cors = require("cors"); //very important
 
 // ------------------------------------------------------------
 // STEP 1 — Import your database connection and Quote model
@@ -44,6 +44,8 @@ app.use(cors()); // allows the React frontend to call this server
 //
 // Return every quote from the database as an array.
 // Hint: find the Sequelize method that fetches all rows from a table.
+
+// next is the default handler.
 // ------------------------------------------------------------
 app.get("/api/quotes", async (req, res, next) => {
   try {
@@ -131,6 +133,7 @@ app.use((error, req, res, next) => {
 // Always await it before calling app.listen.
 // ============================================================
 async function startApp() {
+  console.log("DB connected!");
   // connect to your db here before the express server listens
   await db.sync().then(() => {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
