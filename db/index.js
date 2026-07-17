@@ -16,8 +16,9 @@
 // ============================================================
 const { Sequelize } = require("sequelize");
 
+// If DATABASE_URL exists (on Render), use it. Otherwise, fall back to local config.
 const DB_URL =
-  process.env.DATABSE_URL ||
+  process.env.DATABASE_URL ||
   "postgres://postgres:Luyangmei123@localhost:5432/quotes";
 
 const db = new Sequelize(DB_URL);
